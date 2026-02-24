@@ -85,6 +85,14 @@ if not LEROBOT_TRIGGER_URL.strip():
 # 触发 Lerobot 的最低情绪置信度（0–1）
 LEROBOT_MIN_CONFIDENCE = 0.0
 
+# App 手势动作 → lerobot action 名（直接透传，lerobot 侧新建对应动作）
+ACTION_TO_LEROBOT: dict[str, str] = {
+    "POKE":    "poke",
+    "NUDGE":   "nudge",
+    "WAVE_HI": "wave_hi",
+    "DANCE":   "dance",
+}
+
 # 需要触发提醒横幅的情绪
 ALERT_EMOTIONS = {"伤心", "焦虑", "无聊"}
 
@@ -190,11 +198,24 @@ async def register(sid, data):
 
 @sio.event
 async def perform_action(sid, data):
-    """执行 MoMo 动作（戳戳/蹭蹭/招呼/跳舞）。TODO：转发给 lerobot。"""
+    """执行 MoMo 动作（戳戳/蹭蹭/招呼/跳舞），透传给 lerobot。"""
     action = data.get("action")
     target = data.get("targetDeviceId")
     logger.info("Action: %s → target=%s  (from %s)", action, target, sid)
-    # TODO: robot.send_action(action)
+
+    if LEROBOT_TRIGGER_URL and action in ACTION_TO_LEROBOT:
+        lerobot_action = ACTION_TO_LEROBOT[action]
+        try:
+            timeout = aiohttp.ClientTimeout(total=1.0)
+            async with aiohttp.ClientSession(timeout=timeout) as http:
+                resp = await http.post(
+                    LEROBOT_TRIGGER_URL,
+                    json={"action": lerobot_action},
+                )
+            logger.info("Lerobot action triggered: %s → %s  (HTTP %s)", action, lerobot_action, resp.status)
+        except Exception as exc:
+            logger.warning("Failed to POST action to Lerobot (%s: %s)", type(exc).__name__, exc)
+
     return {"success": True}
 
 
