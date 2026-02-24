@@ -269,9 +269,21 @@ export default function Home() {
       setCurrentKaomoji(getKaomoji(info.executing));
     }
 
+    // 真实模式：通过 socket 发送 perform_action 给 server.py
+    const doAction = mockMode
+      ? mockDoAction(targetDeviceId, action)
+      : new Promise<{ success: boolean }>((resolve, reject) => {
+          if (!socketRef.current) { reject('no socket'); return; }
+          socketRef.current.emit(
+            'perform_action',
+            { action, targetDeviceId },
+            (res: any) => res?.success ? resolve(res) : reject(res),
+          );
+        });
+
     try {
       const result = await Promise.race([
-        mockDoAction(targetDeviceId, action),
+        doAction,
         new Promise<null>((_, reject) => setTimeout(() => reject('timeout'), 5000)),
       ]);
 
