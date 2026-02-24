@@ -11,72 +11,68 @@ interface GestureAreaProps {
 
 export default function GestureArea({ kaomoji, animationClass, onGesture, disabled = false }: GestureAreaProps) {
   const [touching, setTouching] = useState(false);
-  const touchStart = useRef<{ x: number; y: number; time: number } | null>(null);
-  const lastTap = useRef(0);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout>>();
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const gestureHandled = useRef(false);
 
   const handleStart = useCallback((x: number, y: number) => {
     if (disabled) return;
     setTouching(true);
     gestureHandled.current = false;
-    touchStart.current = { x, y, time: Date.now() };
+    touchStart.current = { x, y };
+  }, [disabled]);
 
-    longPressTimer.current = setTimeout(() => {
-      if (!gestureHandled.current) {
-        gestureHandled.current = true;
-        if (navigator.vibrate) navigator.vibrate(30);
-        onGesture('DANCE');
-      }
-    }, 800);
-  }, [disabled, onGesture]);
-
-  const handleMove = useCallback((x: number) => {
+  const handleMove = useCallback((x: number, y: number) => {
     if (!touchStart.current || gestureHandled.current || disabled) return;
-    const dx = Math.abs(x - touchStart.current.x);
-    if (dx > 30) {
+    
+    const dx = x - touchStart.current.x;
+    const dy = y - touchStart.current.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    // 只要滑动超过 30px，立刻判定动作并拦截后续触发
+    if (absDx > 30 || absDy > 30) {
       gestureHandled.current = true;
-      clearTimeout(longPressTimer.current);
-      onGesture('NUDGE');
+      if (navigator.vibrate) navigator.vibrate(15);
+      
+      if (absDx > absDy) {
+        // 横向滑动幅度更大 -> 左右滑 -> 蹭蹭
+        onGesture('NUDGE');
+      } else {
+        // 纵向滑动幅度更大
+        if (dy < 0) {
+          // 上划 -> 招呼
+          onGesture('WAVE_HI');
+        } else {
+          // 下划 -> 跳舞
+          onGesture('DANCE');
+        }
+      }
     }
   }, [disabled, onGesture]);
 
   const handleEnd = useCallback(() => {
     setTouching(false);
-    clearTimeout(longPressTimer.current);
     if (gestureHandled.current || disabled || !touchStart.current) return;
-
-    const now = Date.now();
-    const timeSinceLast = now - lastTap.current;
-
-    if (timeSinceLast < 300) {
-      gestureHandled.current = true;
-      onGesture('WAVE_HI');
-      lastTap.current = 0;
-    } else {
-      lastTap.current = now;
-      setTimeout(() => {
-        if (!gestureHandled.current && lastTap.current === now) {
-          onGesture('POKE');
-        }
-      }, 310);
-    }
+    
+    // 如果抬手时还没触发过滑动（滑动幅度没超过 30px），则视为单纯的点击
+    gestureHandled.current = true;
+    onGesture('POKE');
   }, [disabled, onGesture]);
 
   return (
     <div
       className={cn(
         'w-[320px] max-w-[90vw] h-[200px] mx-auto flex items-center justify-center',
-        'rounded-lg border border-dashed border-primary transition-bouncy overflow-visible',
+        'rounded-lg border border-dashed border-primary transition-bouncy overflow-visible cursor-pointer select-none',
         touching && 'border-2 bg-primary-light',
       )}
       onTouchStart={e => handleStart(e.touches[0].clientX, e.touches[0].clientY)}
-      onTouchMove={e => handleMove(e.touches[0].clientX)}
+      onTouchMove={e => handleMove(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={handleEnd}
       onMouseDown={e => handleStart(e.clientX, e.clientY)}
-      onMouseMove={e => e.buttons && handleMove(e.clientX)}
+      onMouseMove={e => e.buttons === 1 && handleMove(e.clientX, e.clientY)}
       onMouseUp={handleEnd}
-      onMouseLeave={() => { setTouching(false); clearTimeout(longPressTimer.current); }}
+      onMouseLeave={() => setTouching(false)}
     >
       <span
         className={cn('leading-none select-none whitespace-nowrap w-full text-center', animationClass)}
