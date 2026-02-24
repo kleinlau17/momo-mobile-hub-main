@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 97%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 97%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 357 100% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --primary-light: 0 100% 97%;
+    --primary-light-foreground: 357 100% 45%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 69%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --border-primary: 357 100% 45%;
+    --border-light: 0 73% 90%;
+
+    --input: 0 0% 88%;
+    --ring: 357 100% 45%;
+
+    --radius: 0.375rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Status colors */
+    --status-online: 142 71% 45%;
+    --status-offline: 0 84% 60%;
+    --status-connecting: 45 93% 47%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+}
+
+/* ===== MoMo Animations ===== */
+
+@keyframes momo-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes momo-bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.2); }
+  60% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes momo-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes momo-jump {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes momo-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+@keyframes momo-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes momo-dots {
+  0%, 20% { opacity: 0; }
+  40% { opacity: 1; }
+  60%, 100% { opacity: 0; }
+}
+
+@keyframes momo-pulse-dot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+@layer utilities {
+  .animate-breathe {
+    animation: momo-breathe 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  }
+
+  .animate-bounce-q {
+    animation: momo-bounce 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .animate-wiggle {
+    animation: momo-wiggle 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .animate-jump {
+    animation: momo-jump 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .animate-shake {
+    animation: momo-shake 200ms linear 3;
+  }
+
+  .animate-fade-in-up {
+    animation: momo-fade-in-up 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .animate-pulse-dot {
+    animation: momo-pulse-dot 2s ease-in-out infinite;
+  }
+
+  .transition-bouncy {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+/* Mobile container */
+.momo-app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hide scrollbar for friend bar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
