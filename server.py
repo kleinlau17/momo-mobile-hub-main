@@ -31,6 +31,7 @@ import asyncio
 import json
 import logging
 import os
+import time
 import uuid
 
 import aiohttp
@@ -93,8 +94,12 @@ ACTION_TO_LEROBOT: dict[str, str] = {
     "DANCE":   "dance",
 }
 
-# 需要触发提醒横幅的情绪
-ALERT_EMOTIONS = {"伤心", "焦虑", "无聊"}
+# 需要触发提醒横幅的情绪（无聊不弹）
+ALERT_EMOTIONS = {"伤心", "焦虑"}
+
+# 焦虑去重：同一情绪在 ALERT_COOLDOWN 秒内不重复弹出
+ALERT_COOLDOWN = 30  # 秒
+_last_alert_time: dict[str, float] = {}  # emotion → timestamp
 
 # -----------------------------------------------------------------------
 # 全局状态
@@ -294,16 +299,20 @@ async def handle_emotion(data: dict):
             "status": updated_status,
         }, to=sid)
 
-        # 特定情绪触发提醒横幅
+        # 特定情绪触发提醒横幅（同一情绪在冷却期内不重复弹）
         if stable in ALERT_EMOTIONS:
-            await sio.emit("emotion_alert", {
-                "deviceId": session.get("deviceId"),
-                "ownerName": session.get("nickname", "用户"),
-                "momoName": session.get("momoName", "MoMo"),
-                "emotion": stable,
-                "description": data.get("description", ""),
-            }, to=sid)
-            logger.info("Alert sent to %s: %s", session.get("nickname"), stable)
+            now = time.time()
+            last = _last_alert_time.get(stable, 0)
+            if now - last >= ALERT_COOLDOWN:
+                _last_alert_time[stable] = now
+                await sio.emit("emotion_alert", {
+                    "deviceId": session.get("deviceId"),
+                    "ownerName": session.get("nickname", "用户"),
+                    "momoName": session.get("momoName", "MoMo"),
+                    "emotion": stable,
+                    "description": data.get("description", ""),
+                }, to=sid)
+                logger.info("Alert sent to %s: %s", session.get("nickname"), stable)
 
     # 将情绪同步给本地 Lerobot 状态机（如果已配置触发 URL）
     if LEROBOT_TRIGGER_URL:

@@ -67,12 +67,13 @@ export default function GestureArea({ kaomoji, animationClass, onGesture, disabl
         touching && 'border-2 bg-primary-light',
       )}
       onTouchStart={e => handleStart(e.touches[0].clientX, e.touches[0].clientY)}
-      onTouchMove={e => handleMove(e.touches[0].clientX, e.touches[0].clientY)}
+      onTouchMove={e => { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); }}
       onTouchEnd={handleEnd}
-      onMouseDown={e => handleStart(e.clientX, e.clientY)}
-      onMouseMove={e => e.buttons === 1 && handleMove(e.clientX, e.clientY)}
+      onMouseDown={e => { e.preventDefault(); handleStart(e.clientX, e.clientY); }}
+      onMouseMove={e => { if (e.buttons === 1) { e.preventDefault(); handleMove(e.clientX, e.clientY); } }}
       onMouseUp={handleEnd}
       onMouseLeave={() => setTouching(false)}
+      onDragStart={e => e.preventDefault()}
     >
       <span
         className={cn('leading-none select-none whitespace-nowrap w-full text-center', animationClass)}
